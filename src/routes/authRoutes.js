@@ -1,14 +1,20 @@
 const express = require("express");
 const router = express.Router();
+const { protect, requireRole } = require("../middlewares/authMiddleware");
 
-const { registerUser, loginUser } = require("../controllers/authController");
-const { loginLimiter } = require("../middlewares/securityLayer");
+// Public route
+router.get("/public", (req, res) => {
+    res.json({ message: "This is a public route" });
+});
 
-router.post("/register", registerUser);
+// Protected route
+router.get("/protected", protect, (req, res) => {
+    res.json({ message: `Hello ${req.user.name || "user"}, you accessed a protected route` });
+});
 
-// Brute-force protected login
-router.post("/login", loginLimiter, loginUser);
+// Admin-only route
+router.get("/admin", protect, requireRole("admin"), (req, res) => {
+    res.json({ message: "Welcome admin" });
+});
 
 module.exports = router;
-
-

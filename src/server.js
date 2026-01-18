@@ -1,36 +1,41 @@
-const { globalSecurity } = require("./middlewares/securityLayer");
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-require('dotenv').config();
+const express = require("express");
+const mongoose = require("mongoose");
+require("dotenv").config();
 
-const authRoutes = require('./routes/authRoutes');
+const { globalSecurity } = require("./middlewares/securityLayer");
+const authRoutes = require("./routes/authRoutes");
 
 const app = express();
+
+// Mongo security
+mongoose.set("strictQuery", true);
+
+// Global security
 globalSecurity(app);
-/* ---------------- MIDDLEWARE ---------------- */
-app.use(cors());
+
+// Body parser
 app.use(express.json());
 
-/* ---------------- ROUTES ---------------- */
-app.use('/api/v1/auth', authRoutes);
+// Routes
+app.use("/api/v1/auth", authRoutes);
 
-/* ---------------- HEALTH CHECK ---------------- */
-app.get('/', (req, res) => {
-    res.json({ status: 'Attendify backend running' });
+// Health check
+app.get("/", (req, res) => {
+    res.json({ status: "Attendify backend running" });
 });
 
-/* ---------------- START SERVER ---------------- */
+// Start server
 const PORT = process.env.PORT || 5000;
 
-mongoose.connect(process.env.MONGO_URI)
+mongoose
+    .connect(process.env.MONGO_URI)
     .then(() => {
-        console.log('MongoDB connected successfully');
+        console.log("MongoDB connected successfully");
         app.listen(PORT, () =>
             console.log(`Server running on port ${PORT}`)
         );
     })
-    .catch(err => {
-        console.error('MongoDB connection error:', err.message);
+    .catch((err) => {
+        console.error("MongoDB connection error:", err.message);
         process.exit(1);
     });
