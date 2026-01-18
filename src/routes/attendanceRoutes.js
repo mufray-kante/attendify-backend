@@ -1,30 +1,20 @@
 const express = require("express");
 const router = express.Router();
-
 const {
     createAttendanceSession,
+    endSession,
+    generateSessionQR,
     markAttendance
 } = require("../controllers/attendanceController");
 
-const { protect, allowRoles } = require("../middlewares/security");
+const { protect, requireRole } = require("../middlewares/authMiddleware");
 
-/* ================= LECTURER ================= */
-// Only lecturers can start attendance
-router.post(
-    "/start",
-    protect,
-    allowRoles("lecturer"),
-    createAttendanceSession
-);
+// Lecturer routes
+router.post("/", protect, requireRole("lecturer"), createAttendanceSession);
+router.patch("/end", protect, requireRole("lecturer"), endSession);
+router.get("/:sessionId/qr", protect, requireRole("lecturer"), generateSessionQR);
 
-/* ================= STUDENT ================= */
-// Only students can mark attendance
-router.post(
-    "/mark",
-    protect,
-    allowRoles("student"),
-    markAttendance
-);
+// Student route
+router.post("/mark", protect, requireRole("student"), markAttendance);
 
 module.exports = router;
-
