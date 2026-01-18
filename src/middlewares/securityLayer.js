@@ -7,25 +7,30 @@ const cors = require("cors");
    GLOBAL SECURITY MIDDLEWARE
    ====================================================== */
 exports.globalSecurity = (app) => {
-    // Secure HTTP headers
+    // 1️⃣ Secure HTTP headers
     app.use(helmet());
 
-    // Prevent MongoDB operator injection
-    app.use(mongoSanitize());
+    // 2️⃣ Prevent MongoDB operator injection
+    // Only sanitize req.body and req.params, skip req.query
+    app.use(
+        mongoSanitize({
+            replaceWith: "_",
+            allowQuery: false
+        })
+    );
 
-    // CORS (adjust frontend URL when deployed)
+    // 3️⃣ CORS (adjust frontend URL when deployed)
     app.use(cors({
         origin: "http://localhost:5173",
         credentials: true
     }));
 
-    // General API rate limiting
+    // 4️⃣ General API rate limiting
     const apiLimiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 200,
         message: "Too many requests, try again later"
     });
-
     app.use("/api", apiLimiter);
 };
 
