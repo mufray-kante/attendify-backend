@@ -1,45 +1,42 @@
-// src/middlewares/securityLayer.js
-const rateLimit = require("express-rate-limit");
-const helmet = require("helmet");
-const cors = require("cors");
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const cors = require('cors');
 
-/* ================= GLOBAL SECURITY ================= */
 exports.globalSecurity = (app) => {
     // Secure HTTP headers
     app.use(helmet());
 
-    // CORS (local + production)
-    app.use(
-        cors({
-            origin: [
-                "http://localhost:5173",
-                "https://attendify-frontend-nine.vercel.app"
-            ],
-            credentials: true
-        })
-    );
+    // CORS for local dev + production frontend
+    const allowedOrigins = [
+        'http://localhost:5173',
+        'https://attendify-frontend-nine.vercel.app',
+        'https://attendify-frontend-dnezjdnx3-joneskatarinas-projects.vercel.app'
+    ];
 
-    // Global API rate limiting
+    app.use(cors({
+        origin: function(origin, callback){
+            if(!origin) return callback(null, true);
+            if(allowedOrigins.indexOf(origin) === -1){
+                const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+                return callback(new Error(msg), false);
+            }
+            return callback(null, true);
+        },
+        credentials: true
+    }));
+
+    // Global rate limit
     const apiLimiter = rateLimit({
-        windowMs: 15 * 60 * 1000, // 15 minutes
+        windowMs: 15 * 60 * 1000,
         max: 200,
-        standardHeaders: true,
-        legacyHeaders: false,
-        message: {
-            message: "Too many requests. Please try again later."
-        }
+        message: 'Too many requests, try again later'
     });
 
-    app.use("/api", apiLimiter);
+    app.use('/api', apiLimiter);
 };
 
-/* ================= LOGIN RATE LIMIT ================= */
 exports.loginLimiter = rateLimit({
-    windowMs: 10 * 60 * 1000, // 10 minutes
+    windowMs: 10 * 60 * 1000,
     max: 5,
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: {
-        message: "Too many login attempts. Try again later."
-    }
+    message: 'Too many login attempts. Try again later.'
 });
