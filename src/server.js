@@ -4,7 +4,8 @@ require("dotenv").config();
 
 const { globalSecurity } = require("./middlewares/securityLayer");
 const authRoutes = require("./routes/authRoutes");
-const attendanceRoutes = require("./routes/attendanceRoutes"); // <- new
+const attendanceRoutes = require("./routes/attendanceRoutes");
+const adminRoutes = require("./routes/adminRoutes"); // <- new admin routes
 
 const app = express();
 
@@ -19,7 +20,8 @@ app.use(express.json());
 
 // Routes
 app.use("/api/v1/auth", authRoutes);
-app.use("/api/v1/attendance-sessions", attendanceRoutes); // <- new attendance routes
+app.use("/api/v1/attendance-sessions", attendanceRoutes);
+app.use("/api/v1/admin", adminRoutes); // <- admin routes
 
 // Health check
 app.get("/", (req, res) => {
