@@ -1,11 +1,12 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors"); // <-- add this
 require("dotenv").config();
 
 const { globalSecurity } = require("./middlewares/securityLayer");
 const authRoutes = require("./routes/authRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
-const adminRoutes = require("./routes/adminRoutes"); // <- new admin routes
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -18,10 +19,16 @@ globalSecurity(app);
 // Body parser
 app.use(express.json());
 
+// ---------------- CORS ----------------
+app.use(cors({
+    origin: "http://localhost:5173", // frontend URL
+    credentials: true,
+}));
+
 // Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/attendance-sessions", attendanceRoutes);
-app.use("/api/v1/admin", adminRoutes); // <- admin routes
+app.use("/api/v1/admin", adminRoutes);
 
 // Health check
 app.get("/", (req, res) => {

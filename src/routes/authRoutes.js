@@ -1,8 +1,7 @@
-// backend/src/routes/authRoutes.js
 const express = require("express");
 const router = express.Router();
 
-// Fixed import: matches exact file name and casing
+// Correct controller import (match exact casing)
 const { registerUser, loginUser } = require("../controllers/authController");
 const { protect, requireRole } = require("../middlewares/authMiddleware");
 
@@ -21,9 +20,11 @@ router.get("/public", (req, res) => {
 
 // ---------------- PROTECTED ROUTES ----------------
 
-// Protected route (any logged-in user)
+// Any authenticated user
 router.get("/protected", protect, (req, res) => {
-    res.json({ message: `Hello ${req.user.fullName || "user"}, you accessed a protected route` });
+    res.json({
+        message: `Hello ${req.user.fullName || "user"}, you accessed a protected route`,
+    });
 });
 
 // Admin-only route
