@@ -1,15 +1,29 @@
+// backend/src/routes/authRoutes.js
 const express = require("express");
 const router = express.Router();
+
+// Fixed import: matches exact file name and casing
+const { registerUser, loginUser } = require("../controllers/authController");
 const { protect, requireRole } = require("../middlewares/authMiddleware");
 
-// Public route
+// ---------------- PUBLIC ROUTES ----------------
+
+// User registration
+router.post("/register", registerUser);
+
+// User login
+router.post("/login", loginUser);
+
+// Example public GET route
 router.get("/public", (req, res) => {
     res.json({ message: "This is a public route" });
 });
 
-// Protected route
+// ---------------- PROTECTED ROUTES ----------------
+
+// Protected route (any logged-in user)
 router.get("/protected", protect, (req, res) => {
-    res.json({ message: `Hello ${req.user.name || "user"}, you accessed a protected route` });
+    res.json({ message: `Hello ${req.user.fullName || "user"}, you accessed a protected route` });
 });
 
 // Admin-only route

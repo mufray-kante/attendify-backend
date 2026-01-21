@@ -1,23 +1,36 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-require('dotenv').config();
-const User = require('./models/User');
+require("dotenv").config();
+const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const User = require("../src/models/User");
 
-mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(async () => {
-    const existingAdmin = await User.findOne({ email: 'joneskatarinawitt@gmail.com' });
-    if (existingAdmin) {
-      console.log('Admin already exists');
-      process.exit();
+async function createAdmin() {
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+
+        const existing = await User.findOne({
+            email: "joneskatarinawitt@gmail.com",
+        });
+
+        if (existing) {
+            console.log("ℹ️ Admin already exists");
+            process.exit(0);
+        }
+
+        const passwordHash = await bcrypt.hash("9843", 10);
+
+        await User.create({
+            fullName: "Raymond Mwenda",
+            email: "joneskatarinawitt@gmail.com",
+            passwordHash,
+            role: "ADMIN", // ✅ MUST MATCH ENUM EXACTLY
+        });
+
+        console.log("✅ Admin user created successfully");
+        process.exit(0);
+    } catch (err) {
+        console.error("❌ Failed to seed admin:", err.message);
+        process.exit(1);
     }
-    const hashedPassword = await bcrypt.hash('9843', 10);
-    const admin = await User.create({
-      fullName: 'Super Admin',
-      email: 'joneskatarinawitt@gmail.com',
-      passwordHash: hashedPassword,
-      role: 'admin'
-    });
-    console.log('Admin created:', admin);
-    process.exit();
-  })
-  .catch(err => { console.error(err); process.exit(1); });
+}
+
+createAdmin();
