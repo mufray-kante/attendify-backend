@@ -1,21 +1,21 @@
 const express = require("express");
 const router = express.Router();
 
-// Correct controller import (match exact casing)
 const { registerUser, loginUser } = require("../controllers/authController");
 const { protect, requireRole } = require("../middlewares/authMiddleware");
+const { loginLimiter } = require("../middlewares/securityLayer");
 
 // ---------------- PUBLIC ROUTES ----------------
 
 // User registration
 router.post("/register", registerUser);
 
-// User login
-router.post("/login", loginUser);
+// User login (rate-limited)
+router.post("/login", loginLimiter, loginUser);
 
-// Example public GET route
+// Health / public test route
 router.get("/public", (req, res) => {
-    res.json({ message: "This is a public route" });
+    res.json({ message: "Auth service is public and working" });
 });
 
 // ---------------- PROTECTED ROUTES ----------------
@@ -23,7 +23,7 @@ router.get("/public", (req, res) => {
 // Any authenticated user
 router.get("/protected", protect, (req, res) => {
     res.json({
-        message: `Hello ${req.user.fullName || "user"}, you accessed a protected route`,
+        message: `Hello ${req.user?.fullName || "user"}, protected route accessed`,
     });
 });
 
