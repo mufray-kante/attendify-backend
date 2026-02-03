@@ -11,14 +11,18 @@ exports.globalSecurity = (app) => {
     // Security headers
     app.use(helmet());
 
-    // ✅ SINGLE CORS CONFIG (NO wildcard route)
+    // ✅ CORS — MUST COME BEFORE EVERYTHING
     app.use(
         cors({
             origin: (origin, callback) => {
-                if (!origin) return callback(null, true); // allow Postman
+                // Allow server-to-server, Postman, curl
+                if (!origin) return callback(null, true);
+
                 if (allowedOrigins.includes(origin)) {
                     return callback(null, true);
                 }
+
+                // Reject others WITHOUT crashing
                 return callback(null, false);
             },
             credentials: true,
@@ -27,7 +31,10 @@ exports.globalSecurity = (app) => {
         })
     );
 
-    // ✅ Rate limiting (API only)
+    // ✅ Explicitly handle preflight
+    app.options(/.*/, cors());
+
+    // API rate limiter
     const apiLimiter = rateLimit({
         windowMs: 15 * 60 * 1000,
         max: 200,
@@ -38,9 +45,10 @@ exports.globalSecurity = (app) => {
     app.use("/api", apiLimiter);
 };
 
-// Login-specific limiter
 exports.loginLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
     message: "Too many login attempts. Try again later.",
 });
