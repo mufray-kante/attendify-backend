@@ -1,30 +1,43 @@
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
-const cors = require('cors');
+const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
+const cors = require("cors");
 
 exports.globalSecurity = (app) => {
+    // Security headers
     app.use(helmet());
 
-    // Updated CORS for localhost and Vercel
-    app.use(cors({
-        origin: [
-            'http://localhost:5173',
-            'https://attendify-frontend-nine.vercel.app'
-        ],
-        credentials: true
-    }));
+    // CORS — single source of truth
+    app.use(
+        cors({
+            origin: [
+                "http://localhost:5173",
+                "https://attendify-frontend-fmlxy7z9t-joneskatarinas-projects.vercel.app"
+            ],
+            methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            allowedHeaders: ["Content-Type", "Authorization"],
+            credentials: true
+        })
+    );
 
+    // Handle preflight requests explicitly
+    app.options("*", cors());
+
+    // API rate limiting
     const apiLimiter = rateLimit({
         windowMs: 15 * 60 * 1000,
         max: 200,
-        message: 'Too many requests, try again later'
+        standardHeaders: true,
+        legacyHeaders: false,
     });
 
-    app.use('/api', apiLimiter);
+    app.use("/api", apiLimiter);
 };
 
+// Login-specific limiter
 exports.loginLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 5,
-    message: 'Too many login attempts. Try again later.'
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: "Too many login attempts. Try again later.",
 });

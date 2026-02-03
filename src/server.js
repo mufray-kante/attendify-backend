@@ -1,9 +1,9 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors"); // <-- add this
 require("dotenv").config();
 
 const { globalSecurity } = require("./middlewares/securityLayer");
+
 const authRoutes = require("./routes/authRoutes");
 const attendanceRoutes = require("./routes/attendanceRoutes");
 const adminRoutes = require("./routes/adminRoutes");
@@ -13,17 +13,11 @@ const app = express();
 // MongoDB strict query
 mongoose.set("strictQuery", true);
 
-// Global security middlewares
+// Security + CORS (ONLY HERE)
 globalSecurity(app);
 
 // Body parser
 app.use(express.json());
-
-// ---------------- CORS ----------------
-app.use(cors({
-    origin: "http://localhost:5173", // frontend URL
-    credentials: true,
-}));
 
 // Routes
 app.use("/api/v1/auth", authRoutes);
@@ -35,16 +29,17 @@ app.get("/", (req, res) => {
     res.json({ status: "Attendify backend running" });
 });
 
-// Start server
 const PORT = process.env.PORT || 5000;
 
 mongoose
     .connect(process.env.MONGO_URI)
     .then(() => {
-        console.log("MongoDB connected successfully");
-        app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+        console.log("MongoDB connected");
+        app.listen(PORT, () =>
+            console.log(`Server running on port ${PORT}`)
+        );
     })
     .catch((err) => {
-        console.error("MongoDB connection error:", err.message);
+        console.error("MongoDB error:", err.message);
         process.exit(1);
     });
