@@ -2,27 +2,32 @@ const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 const cors = require("cors");
 
+const allowedOrigins = [
+    "http://localhost:5173",
+    "https://attendify-frontend-fmlxy7z9t-joneskatarinas-projects.vercel.app"
+];
+
 exports.globalSecurity = (app) => {
     // Security headers
     app.use(helmet());
 
-    // CORS — single source of truth
+    // ✅ SINGLE CORS CONFIG (NO wildcard route)
     app.use(
         cors({
-            origin: [
-                "http://localhost:5173",
-                "https://attendify-frontend-fmlxy7z9t-joneskatarinas-projects.vercel.app"
-            ],
+            origin: (origin, callback) => {
+                if (!origin) return callback(null, true); // allow Postman
+                if (allowedOrigins.includes(origin)) {
+                    return callback(null, true);
+                }
+                return callback(null, false);
+            },
+            credentials: true,
             methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             allowedHeaders: ["Content-Type", "Authorization"],
-            credentials: true
         })
     );
 
-    // Handle preflight requests explicitly
-    app.options("*", cors());
-
-    // API rate limiting
+    // ✅ Rate limiting (API only)
     const apiLimiter = rateLimit({
         windowMs: 15 * 60 * 1000,
         max: 200,
@@ -37,7 +42,5 @@ exports.globalSecurity = (app) => {
 exports.loginLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 5,
-    standardHeaders: true,
-    legacyHeaders: false,
     message: "Too many login attempts. Try again later.",
 });
