@@ -4,26 +4,25 @@ const cors = require("cors");
 
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://attendify-frontend-fmlxy7z9t-joneskatarinas-projects.vercel.app"
+    process.env.FRONTEND_URL, // Production frontend
 ];
 
 exports.globalSecurity = (app) => {
     // Security headers
     app.use(helmet());
 
-    // ✅ CORS — MUST COME BEFORE EVERYTHING
+    // CORS
     app.use(
         cors({
             origin: (origin, callback) => {
-                // Allow server-to-server, Postman, curl
+                // Allow Postman, curl, server-to-server
                 if (!origin) return callback(null, true);
 
                 if (allowedOrigins.includes(origin)) {
                     return callback(null, true);
                 }
 
-                // Reject others WITHOUT crashing
-                return callback(null, false);
+                return callback(new Error("Not allowed by CORS"));
             },
             credentials: true,
             methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
@@ -31,12 +30,12 @@ exports.globalSecurity = (app) => {
         })
     );
 
-    // ✅ Explicitly handle preflight
-    app.options(/.*/, cors());
+    // Handle preflight properly
+    app.options("*", cors());
 
-    // API rate limiter
+    // General API rate limiter
     const apiLimiter = rateLimit({
-        windowMs: 15 * 60 * 1000,
+        windowMs: 15 * 60 * 1000, // 15 minutes
         max: 200,
         standardHeaders: true,
         legacyHeaders: false,
@@ -47,7 +46,7 @@ exports.globalSecurity = (app) => {
 
 exports.loginLimiter = rateLimit({
     windowMs: 10 * 60 * 1000,
-    max: 5,
+    max: 10,
     standardHeaders: true,
     legacyHeaders: false,
     message: "Too many login attempts. Try again later.",
