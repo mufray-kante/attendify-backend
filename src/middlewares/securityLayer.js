@@ -2,20 +2,21 @@ const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 const cors = require("cors");
 
+// Allowed origins: localhost for dev + production frontend from env
 const allowedOrigins = [
     "http://localhost:5173",
-    process.env.FRONTEND_URL, // Production frontend
+    process.env.FRONTEND_URL, // Production frontend URL
 ];
 
 exports.globalSecurity = (app) => {
-    // Security headers
+    // ✅ Security headers
     app.use(helmet());
 
-    // CORS
+    // ✅ CORS
     app.use(
         cors({
             origin: (origin, callback) => {
-                // Allow Postman, curl, server-to-server
+                // Allow server-to-server, Postman, curl, etc.
                 if (!origin) return callback(null, true);
 
                 if (allowedOrigins.includes(origin)) {
@@ -30,10 +31,9 @@ exports.globalSecurity = (app) => {
         })
     );
 
-    // Handle preflight properly
-    app.options("*", cors());
+    // ✅ Preflight requests are automatically handled by cors()
 
-    // General API rate limiter
+    // ✅ General API rate limiter (15 min window)
     const apiLimiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 200,
@@ -44,9 +44,10 @@ exports.globalSecurity = (app) => {
     app.use("/api", apiLimiter);
 };
 
+// ✅ Login-specific rate limiter
 exports.loginLimiter = rateLimit({
-    windowMs: 10 * 60 * 1000,
-    max: 10,
+    windowMs: 10 * 60 * 1000, // 10 minutes
+    max: 5,
     standardHeaders: true,
     legacyHeaders: false,
     message: "Too many login attempts. Try again later.",
