@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+
 const {
     createLecturer,
     createStudent,
@@ -9,8 +10,13 @@ const {
 
 const { protect, allowRoles } = require("../middlewares/security");
 
-router.use(protect, allowRoles("admin"));
+/*
+   Only ADMIN can access all routes below
+*/
+router.use(protect);
+router.use(allowRoles("ADMIN"));
 
+/* ---------- ADMIN ACTIONS ---------- */
 router.post("/lecturer", createLecturer);
 router.post("/student", createStudent);
 router.post("/course", createCourse);

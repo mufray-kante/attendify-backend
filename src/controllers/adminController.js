@@ -3,89 +3,142 @@ const Course = require("../models/Course");
 const Enrollment = require("../models/Enrollment");
 const bcrypt = require("bcrypt");
 
-/* ---------------- CREATE LECTURER ---------------- */
+/* ===========================
+   CREATE LECTURER
+=========================== */
 exports.createLecturer = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-        if (!name || !email || !password)
-            return res.status(400).json({ message: "All fields required" });
+        const { fullName, email, password, staffNumber } = req.body;
 
-        const existing = await User.findOne({ email });
-        if (existing) return res.status(400).json({ message: "Email already exists" });
+        if (!fullName || !email || !password || !staffNumber) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email already exists" });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
 
         const lecturer = await User.create({
-            name,
+            fullName,
             email,
-            password: hashedPassword,
-            role: "lecturer"
+            staffNumber,
+            passwordHash,
+            role: "LECTURER"
         });
 
-        res.status(201).json({ message: "Lecturer created", lecturer });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to create lecturer" });
+        res.status(201).json({
+            message: "Lecturer created successfully",
+            lecturer
+        });
+
+    } catch (error) {
+        console.error("Create Lecturer Error:", error);
+        res.status(500).json({ message: "Server error while creating lecturer" });
     }
 };
 
-/* ---------------- CREATE STUDENT ---------------- */
+
+/* ===========================
+   CREATE STUDENT
+=========================== */
 exports.createStudent = async (req, res) => {
     try {
-        const { name, email, password } = req.body;
-        if (!name || !email || !password)
-            return res.status(400).json({ message: "All fields required" });
+        const { fullName, email, password, regNumber } = req.body;
 
-        const existing = await User.findOne({ email });
-        if (existing) return res.status(400).json({ message: "Email already exists" });
+        if (!fullName || !email || !password || !regNumber) {
+            return res.status(400).json({ message: "All fields are required" });
+        }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: "Email already exists" });
+        }
+
+        const passwordHash = await bcrypt.hash(password, 10);
 
         const student = await User.create({
-            name,
+            fullName,
             email,
-            password: hashedPassword,
-            role: "student"
+            regNumber,
+            passwordHash,
+            role: "STUDENT"
         });
 
-        res.status(201).json({ message: "Student created", student });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to create student" });
+        res.status(201).json({
+            message: "Student created successfully",
+            student
+        });
+
+    } catch (error) {
+        console.error("Create Student Error:", error);
+        res.status(500).json({ message: "Server error while creating student" });
     }
 };
 
-/* ---------------- CREATE COURSE ---------------- */
+
+/* ===========================
+   CREATE COURSE
+=========================== */
 exports.createCourse = async (req, res) => {
     try {
         const { title, description } = req.body;
-        if (!title) return res.status(400).json({ message: "Title required" });
 
-        const course = await Course.create({ title, description });
+        if (!title) {
+            return res.status(400).json({ message: "Course title is required" });
+        }
 
-        res.status(201).json({ message: "Course created", course });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to create course" });
+        const course = await Course.create({
+            title,
+            description
+        });
+
+        res.status(201).json({
+            message: "Course created successfully",
+            course
+        });
+
+    } catch (error) {
+        console.error("Create Course Error:", error);
+        res.status(500).json({ message: "Server error while creating course" });
     }
 };
 
-/* ---------------- ENROLL STUDENT ---------------- */
+
+/* ===========================
+   ENROLL STUDENT
+=========================== */
 exports.enrollStudent = async (req, res) => {
     try {
         const { studentId, courseId } = req.body;
-        if (!studentId || !courseId)
-            return res.status(400).json({ message: "StudentId & CourseId required" });
 
-        const alreadyEnrolled = await Enrollment.findOne({ studentId, courseId });
-        if (alreadyEnrolled)
-            return res.status(400).json({ message: "Student already enrolled" });
+        if (!studentId || !courseId) {
+            return res.status(400).json({ message: "Student ID and Course ID are required" });
+        }
 
-        const enrollment = await Enrollment.create({ studentId, courseId });
+        const existingEnrollment = await Enrollment.findOne({
+            studentId,
+            courseId
+        });
 
-        res.status(201).json({ message: "Student enrolled", enrollment });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Failed to enroll student" });
+        if (existingEnrollment) {
+            return res.status(400).json({ message: "Student already enrolled in this course" });
+        }
+
+        const enrollment = await Enrollment.create({
+            studentId,
+            courseId
+        });
+
+        res.status(201).json({
+            message: "Student enrolled successfully",
+            enrollment
+        });
+
+    } catch (error) {
+        console.error("Enroll Student Error:", error);
+        res.status(500).json({ message: "Server error while enrolling student" });
     }
 };
