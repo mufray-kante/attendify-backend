@@ -2,23 +2,23 @@ const rateLimit = require("express-rate-limit");
 const helmet = require("helmet");
 const cors = require("cors");
 
-// Allowed origins: localhost for dev + production frontend from env
 const allowedOrigins = [
     "http://localhost:5173",
-    process.env.FRONTEND_URL, // Production frontend URL
-];
+    process.env.FRONTEND_URL, // Production frontend URL from env
+].filter(Boolean); // remove undefined if env not set
 
 exports.globalSecurity = (app) => {
-    // ✅ Security headers
+    // Security headers
     app.use(helmet());
 
-    // ✅ CORS
+    // ✅ CORS middleware
     app.use(
         cors({
             origin: (origin, callback) => {
-                // Allow server-to-server, Postman, curl, etc.
+                // Allow server-to-server requests (Postman, curl)
                 if (!origin) return callback(null, true);
 
+                // Check allowed origins
                 if (allowedOrigins.includes(origin)) {
                     return callback(null, true);
                 }
@@ -31,9 +31,9 @@ exports.globalSecurity = (app) => {
         })
     );
 
-    // ✅ Preflight requests are automatically handled by cors()
+    // No need for app.options("*"), cors() handles preflight automatically
 
-    // ✅ General API rate limiter (15 min window)
+    // API rate limiter
     const apiLimiter = rateLimit({
         windowMs: 15 * 60 * 1000, // 15 minutes
         max: 200,
@@ -44,7 +44,7 @@ exports.globalSecurity = (app) => {
     app.use("/api", apiLimiter);
 };
 
-// ✅ Login-specific rate limiter
+// Login-specific rate limiter
 exports.loginLimiter = rateLimit({
     windowMs: 10 * 60 * 1000, // 10 minutes
     max: 5,
